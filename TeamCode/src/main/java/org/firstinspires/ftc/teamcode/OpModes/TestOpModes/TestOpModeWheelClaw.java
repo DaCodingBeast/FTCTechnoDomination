@@ -24,12 +24,12 @@ public class TestOpModeWheelClaw extends OpMode {
 
     @Override
     public void loop() {
-        if (gamepad2.right_bumper) {
-            myRobot.clawTurnIn();
-        } else if (gamepad2.left_bumper) {
-            myRobot.clawTurnOut();
-        } else {
-            myRobot.clawStop();
-        }
+//        if (gamepad2.right_bumper) {
+//            myRobot.clawTurnIn();
+//        } else if (gamepad2.left_bumper) {
+//            myRobot.clawTurnOut();
+//        } else {
+//            myRobot.clawStop();
+//        }
     }
 }
