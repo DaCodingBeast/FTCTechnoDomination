@@ -11,12 +11,11 @@ import org.firstinspires.ftc.teamcode.Hardware.RobotParametersPT;
 @TeleOp(name="ArmTest", group="TestOpModes")
 public class TestOpModeArmMotor extends OpMode {
 
-    private RobotParametersPT params;
     private Robot myRobot;
 
     @Override
     public void init(){
-        params = new RobotParametersPT();
+        RobotParametersPT params = new RobotParametersPT();
         myRobot = new Robot(params,hardwareMap,false,false,false, true);
         telemetry.addData("Status", "Initialized");
         telemetry.update();

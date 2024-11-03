@@ -10,8 +10,8 @@ public class SlidePT {
     private final DcMotor SlideMotor2;
 
     public SlidePT(RobotParametersPT params, HardwareMap hardwareMap){
-        SlideMotor1 = hardwareMap.get(DcMotor.class, params.slideMotorName1);
-        SlideMotor2 = hardwareMap.get(DcMotor.class, params.slideMotorName2);
+        SlideMotor1 = hardwareMap.get(DcMotor.class, RobotParametersPT.slideMotorName1);
+        SlideMotor2 = hardwareMap.get(DcMotor.class, RobotParametersPT.slideMotorName2);
         SlideMotor2.setDirection(DcMotor.Direction.REVERSE);
         SlideMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         SlideMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);

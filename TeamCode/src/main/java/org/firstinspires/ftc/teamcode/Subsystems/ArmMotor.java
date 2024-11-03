@@ -6,7 +6,6 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
@@ -14,7 +13,6 @@ import org.firstinspires.ftc.teamcode.Hardware.RobotParametersPT;
 import org.firstinspires.ftc.teamcode.OpModes.TeleOp.TeleOpPT;
 
 public class ArmMotor {
-    private RobotParametersPT params;
     public DcMotorEx ArmMotor1;
     public DcMotorEx ArmMotor2;
     PIDFCoefficients pidfOrig = new PIDFCoefficients();
@@ -25,16 +23,16 @@ public class ArmMotor {
     double ff;
     double power;
 
-    private PIDController controller;
+    private final PIDController controller;
     public static double p =0.0180, i=0, d=0.0009;
     public static double f=0.77;
 
     public static int targetPos = 0;
     private static double ticks_in_degree = 1425.1/180.0;
-    boolean targetReached = false;
+//    boolean targetReached = false;
 
 
-    public ArmMotor(RobotParametersPT params, HardwareMap hardwareMap) {
+    public ArmMotor(HardwareMap hardwareMap) {
         controller = new PIDController(p,i,d);
         ArmMotor1 = hardwareMap.get(DcMotorEx.class, RobotParametersPT.armMotorName1);
         //ArmMotor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -59,7 +57,6 @@ public class ArmMotor {
         ArmMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         ArmMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         */
-
 
     }
         public void stateUpdate (RobotParametersPT.ArmState armState,double power){
@@ -123,7 +120,7 @@ public class ArmMotor {
         // Re-read coefficients and verify change.
         pidfModified = ArmMotor1.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        int newTarget1 =  (int) getNewPosition(distance);
+        int newTarget1 = getNewPosition(distance);
 
         ArmMotor1.setTargetPosition((int)distance);
         ArmMotor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -137,8 +134,8 @@ public class ArmMotor {
         ArmMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         ArmMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        int newTarget1 = ArmMotor1.getCurrentPosition() + (int) getNewPosition(distance);
-        int newTarget2 = ArmMotor2.getCurrentPosition() + (int) getNewPosition(distance);
+        int newTarget1 = ArmMotor1.getCurrentPosition() + getNewPosition(distance);
+        int newTarget2 = ArmMotor2.getCurrentPosition() + getNewPosition(distance);
 
         ArmMotor1.setTargetPosition((int)distance);
         ArmMotor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -172,22 +169,7 @@ public class ArmMotor {
         return telemetry;
     }
 
-    public void holdArm(double power) {
-        ArmMotor1.setPower(power);
-        ArmMotor2.setPower(power);
 
-    }
-    public void noEncoderMovement(double power){
-        ArmMotor1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        ArmMotor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        ArmMotor2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        ArmMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        ArmMotor1.setPower(-power);
-        ArmMotor2.setPower(power);
-
-
-    }
     public void moveArmVersion2(int target) {
         p =0.0180;
         i=0;
@@ -227,3 +209,19 @@ public class ArmMotor {
 //        // change coefficients using methods included with DcMotorEx class.
 //        PIDCoefficients pidNew = new PIDCoefficients(NEW_P, NEW_I, NEW_D);
 //        motorExLeft.setPIDCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidNew);
+//public void holdArm(double power) {
+//        ArmMotor1.setPower(power);
+//        ArmMotor2.setPower(power);
+//
+//    }
+//    public void noEncoderMovement(double power){
+//        ArmMotor1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        ArmMotor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        ArmMotor2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        ArmMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//
+//        ArmMotor1.setPower(-power);
+//        ArmMotor2.setPower(power);
+//
+//
+//    }

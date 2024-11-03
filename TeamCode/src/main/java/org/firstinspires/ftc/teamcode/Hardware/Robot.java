@@ -13,7 +13,6 @@ public class Robot {
     public RobotParametersPT params;
     public DriveTrainPT driveTrain;
     public SlidePT slide;
-    public ClawPT claw;
     public ArmMotor arm;
 
     public Robot(RobotParametersPT params, HardwareMap hardwareMap, boolean isDriveTrain, boolean isSlide, boolean isClaw, boolean isArm){
@@ -21,10 +20,8 @@ public class Robot {
             driveTrain = new DriveTrainPT(params,hardwareMap);
         if (isSlide)
             slide = new SlidePT(params, hardwareMap);
-        if (isClaw)
-            claw = new ClawPT(params, hardwareMap);
         if (isArm)
-            arm = new ArmMotor(params, hardwareMap);
+            arm = new ArmMotor(hardwareMap);
     }
 
     public void teleopDrive(double drive, double strafe, double rotate){
@@ -63,17 +60,6 @@ public class Robot {
         slide.stateUpdate(RobotParametersPT.SlideState.STOP, RobotParametersPT.defaultSlidePower);
     }
 
-    public void clawTurnIn(){
-        claw.stateUpdate(RobotParametersPT.ClawState.TURN_IN, RobotParametersPT.defaultClawPower);
-    }
-
-    public void clawTurnOut(){
-        claw.stateUpdate(RobotParametersPT.ClawState.TURN_OUT, RobotParametersPT.defaultClawPower);
-    }
-
-    public void clawStop(){
-        claw.stateUpdate(RobotParametersPT.ClawState.STOP, RobotParametersPT.defaultClawPower);
-    }
     public void armPivotUp(){
         arm.stateUpdate(RobotParametersPT.ArmState.PIVOT_UP, RobotParametersPT.defaultArmPower);
     }

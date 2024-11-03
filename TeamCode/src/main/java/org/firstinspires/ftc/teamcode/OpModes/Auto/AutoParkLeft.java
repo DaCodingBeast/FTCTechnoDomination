@@ -13,17 +13,15 @@ import org.firstinspires.ftc.teamcode.Hardware.RobotParametersPT;
 public class AutoParkLeft extends LinearOpMode {
 
 
-    private RobotParametersPT params;
-    private Robot myRobot;
-    private ElapsedTime runtime = new ElapsedTime();
+    private final ElapsedTime runtime = new ElapsedTime();
     int phase = 0;
     //hello world; we are about to override
     @Override
     public void runOpMode(){
-        params = new RobotParametersPT();
-        myRobot = new Robot(params,hardwareMap,true,false, false, true);
+        RobotParametersPT params = new RobotParametersPT();
+        Robot myRobot = new Robot(params, hardwareMap, true, false, false, true);
         telemetry.addData("Status", "Initialized");
-        telemetry.addData("yaw ",myRobot.driveTrain.getYaw());
+        telemetry.addData("yaw ", myRobot.driveTrain.getYaw());
         telemetry.update();
 
         // Wait for the start button to be pressed
@@ -45,14 +43,14 @@ public class AutoParkLeft extends LinearOpMode {
             //sleep(1500);
 
             //Go forward 41 in
-            myRobot.driveTrain.driveStraight(params.defaultDrivePower*params.powerReduction, 41.0);
+            myRobot.driveTrain.driveStraight(RobotParametersPT.defaultDrivePower * RobotParametersPT.powerReduction, 41.0);
             while (myRobot.driveTrain.FrontLeftDCMotor.isBusy()) {}
             myRobot.driveTrain.stop();
             sleep(3000);
             //Turn right to angle 90, using gyro
-            myRobot.driveTrain.turnRightByGyro(-90, params.defaultDrivePower*params.powerReduction);
+            myRobot.driveTrain.turnRightByGyro(-90, RobotParametersPT.defaultDrivePower * RobotParametersPT.powerReduction);
             while (myRobot.driveTrain.FrontLeftDCMotor.isBusy()) {
-                telemetry.addData("yaw 1",myRobot.driveTrain.getYaw());
+                telemetry.addData("yaw 1", myRobot.driveTrain.getYaw());
                 telemetry.update();
                 sleep(500);
             }
@@ -60,7 +58,7 @@ public class AutoParkLeft extends LinearOpMode {
             sleep(3000);
 
             //Go straight just a little bit to make sure its in the space
-            myRobot.driveTrain.driveStraight(params.defaultDrivePower*params.powerReduction, 7.0);
+            myRobot.driveTrain.driveStraight(RobotParametersPT.defaultDrivePower * RobotParametersPT.powerReduction, 7.0);
             while (myRobot.driveTrain.FrontLeftDCMotor.isBusy()) {}
             myRobot.driveTrain.stop();
             sleep(1000);

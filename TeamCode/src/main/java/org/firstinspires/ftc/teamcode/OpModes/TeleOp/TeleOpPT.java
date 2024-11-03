@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Hardware.Robot;
 import org.firstinspires.ftc.teamcode.Hardware.RobotParametersPT;
+import org.firstinspires.ftc.teamcode.Subsystems.ClawPT;
 
 
 @TeleOp(name="TeleOpPT", group="TeleOp")
@@ -17,8 +18,8 @@ public class TeleOpPT extends OpMode {
 
     private RobotParametersPT params;
     private Robot myRobot;
-    private int cnt = 0;
     private int armTargetPos;
+    ClawPT claw;
 
     @Override
     public void init() {
@@ -27,6 +28,7 @@ public class TeleOpPT extends OpMode {
         myRobot = new Robot(params, hardwareMap, true, true, true, true);
         telemetry.addData("Status", "Initialized");
         telemetry.update();
+        claw = new ClawPT(hardwareMap);
     }
 
     @Override
@@ -41,9 +43,9 @@ public class TeleOpPT extends OpMode {
 
         // Intake control
         if (gamepad2.left_bumper) {
-            myRobot.claw.turnIn(1);
+            claw.state = ClawPT.State.IN;
         } else if (gamepad2.right_bumper) {
-            myRobot.claw.turnOut(1);
+            claw.state = ClawPT.State.OUT;
             //Slide control
         }
 
@@ -75,6 +77,9 @@ public class TeleOpPT extends OpMode {
         myRobot.arm.moveArmVersion2(armTargetPos);
         telemetry.addData("Arm telemetry", myRobot.arm.getTelemetryForArm());
         telemetry.update();
+
+
+        claw.update(.5);
 
     }
 }
