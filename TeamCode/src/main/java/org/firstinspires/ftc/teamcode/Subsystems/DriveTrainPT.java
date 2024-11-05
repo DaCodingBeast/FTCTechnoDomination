@@ -2,16 +2,17 @@
 
 package org.firstinspires.ftc.teamcode.Subsystems;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.Hardware.RobotParametersPT;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class DriveTrainPT {
     private RobotParametersPT params;
@@ -23,7 +24,7 @@ public class DriveTrainPT {
     private YawPitchRollAngles orientation;
 
 
-    public DriveTrainPT(RobotParametersPT params, HardwareMap hardwareMap){
+    public DriveTrainPT(RobotParametersPT params, HardwareMap hardwareMap) {
         this.params = params;
         // Initialize drive motors
         FrontLeftDCMotor = hardwareMap.get(DcMotor.class, params.frontLeftMotorName);
@@ -118,7 +119,7 @@ public class DriveTrainPT {
         }
     }
 
-    public void alignAngle ( double angle, double power){
+    public void alignAngle(double angle, double power) {
         FrontLeftDCMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         FrontRightDCMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         orientation = imu.getRobotYawPitchRollAngles();
@@ -135,23 +136,38 @@ public class DriveTrainPT {
         double Counts_Per_Motor_Rev = params.Counts_Per_Motor_Wheel;
         double Drive_Gear_Reduction = params.Drive_Gear_Reduction;
         double Wheel_Diameter = params.Wheel_Diameter;
-        double Counts_Per_Inch_Drive = (Counts_Per_Motor_Rev * Drive_Gear_Reduction)/(Wheel_Diameter * 3.1415);
-        return (int)(distance * Counts_Per_Inch_Drive);
-    }
-    public void driveStraight(double power, double distance) {
-        int newLeftTarget = FrontLeftDCMotor.getCurrentPosition() + (int)(getNewPosition(distance));
-        int newRightTarget = FrontRightDCMotor.getCurrentPosition() + (int)(getNewPosition(distance));
-
-        FrontLeftDCMotor.setTargetPosition(newLeftTarget);
-        FrontRightDCMotor.setTargetPosition(newRightTarget);
-        FrontLeftDCMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        FrontRightDCMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        FrontLeftDCMotor.setPower(power);
-        FrontRightDCMotor.setPower(power);
-        BackLeftDCMotor.setPower(power);
-        BackRightDCMotor.setPower(power);
+        double Counts_Per_Inch_Drive = (Counts_Per_Motor_Rev * Drive_Gear_Reduction) / (Wheel_Diameter * 3.1415);
+        return (int) (distance * Counts_Per_Inch_Drive);
     }
 
+    boolean initialized = false;
+
+    public boolean driveStraight(double power, double distance) {
+
+        ArrayList<Integer> targets = new ArrayList<>(4);
+        ArrayList<DcMotor> motors = new ArrayList<>(Arrays.asList(FrontLeftDCMotor, FrontRightDCMotor, BackLeftDCMotor, BackRightDCMotor));
+        boolean done = true;
+
+        for(int i = 0; i < motors.size(); i++) {
+            DcMotor motor = motors.get(i);
+
+            if (!initialized) {
+                int target = motor.getCurrentPosition() + getNewPosition(distance);
+                motor.setTargetPosition(target);
+                initialized = true;
+                targets.add(target);
+            }
+
+            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motor.setPower(power);
+
+            if(Math.abs(motor.getCurrentPosition() - targets.get(i)) > 20) done = false;
+        }
+        if(done){
+            initialized = false;
+            return true;
+        } else return false;
+    }
 
 
 }
