@@ -2,6 +2,7 @@
 
 package org.firstinspires.ftc.teamcode.Subsystems;
 
+import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -13,6 +14,8 @@ import org.firstinspires.ftc.teamcode.Hardware.RobotParametersPT;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class DriveTrainPT {
     private RobotParametersPT params;
@@ -133,40 +136,42 @@ public class DriveTrainPT {
     }
 
     public int getNewPosition(double distance) {
-        double Counts_Per_Motor_Rev = params.Counts_Per_Motor_Wheel;
-        double Drive_Gear_Reduction = params.Drive_Gear_Reduction;
-        double Wheel_Diameter = params.Wheel_Diameter;
+        double Counts_Per_Motor_Rev = RobotParametersPT.Counts_Per_Motor_Wheel;
+        double Drive_Gear_Reduction = RobotParametersPT.Drive_Gear_Reduction;
+        double Wheel_Diameter = RobotParametersPT.Wheel_Diameter;
         double Counts_Per_Inch_Drive = (Counts_Per_Motor_Rev * Drive_Gear_Reduction) / (Wheel_Diameter * 3.1415);
         return (int) (distance * Counts_Per_Inch_Drive);
     }
 
-    boolean initialized = false;
+    ArrayList<Boolean> initialized = new ArrayList<>(Arrays.asList(false, false));
 
     public boolean driveStraight(double power, double distance) {
-
-        ArrayList<Integer> targets = new ArrayList<>(4);
-        ArrayList<DcMotor> motors = new ArrayList<>(Arrays.asList(FrontLeftDCMotor, FrontRightDCMotor, BackLeftDCMotor, BackRightDCMotor));
+        int distanceInTicks = getNewPosition(distance);
+        int [] targets = new int[2];
+        List<DcMotor> motors = new ArrayList<>(Arrays.asList(FrontLeftDCMotor, FrontRightDCMotor));
         boolean done = true;
 
         for(int i = 0; i < motors.size(); i++) {
             DcMotor motor = motors.get(i);
 
-            if (!initialized) {
-                int target = motor.getCurrentPosition() + getNewPosition(distance);
-                motor.setTargetPosition(target);
-                initialized = true;
-                targets.add(target);
+            if (!initialized.get(i)) {
+                targets[i] = motor.getCurrentPosition() + distanceInTicks;
+                motor.setTargetPosition(targets[i]);
+                initialized.set(i, true);
             }
 
             motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             motor.setPower(power);
-
-            if(Math.abs(motor.getCurrentPosition() - targets.get(i)) > 20) done = false;
+            if(Math.abs(motor.getCurrentPosition() - targets[i]) > 20) done = false;
         }
+
+        BackLeftDCMotor.setPower(FrontLeftDCMotor.getPower());
+        BackRightDCMotor.setPower(FrontRightDCMotor.getPower());
+
         if(done){
-            initialized = false;
-            return true;
-        } else return false;
+            Collections.fill(initialized, false);
+        }
+        return done;
     }
 
 
