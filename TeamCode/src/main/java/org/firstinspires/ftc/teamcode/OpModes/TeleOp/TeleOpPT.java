@@ -6,29 +6,34 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Hardware.Robot;
 import org.firstinspires.ftc.teamcode.Hardware.RobotParametersPT;
-import org.firstinspires.ftc.teamcode.Subsystems.ClawPT;
-
 
 @TeleOp(name="TeleOpPT", group="TeleOp")
 public class TeleOpPT extends OpMode {
+    //hi
 
     private RobotParametersPT params;
     private Robot myRobot;
-    private int armTargetPos;
-    ClawPT claw;
+    private int cnt = 0;
+    private int armTargetPos = 0;
+    private int slideTargetPos = 0;
+    boolean pressedOrNotPressedArm = false;
+    boolean pressedOrNotPressedSlide = false;
 
     @Override
     public void init() {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         params = new RobotParametersPT();
         myRobot = new Robot(params, hardwareMap, true, true, true, true);
+
+        //myRobot.arm.endAutoArmPosition = myRobot.arm.getCurrentPosition(myRobot.arm.ArmMotor1);
         telemetry.addData("Status", "Initialized");
+        telemetry.addData("Auto Arm Position",myRobot.arm.endAutoArmPosition);
         telemetry.update();
-        claw = new ClawPT(hardwareMap);
     }
 
     @Override
@@ -41,20 +46,38 @@ public class TeleOpPT extends OpMode {
 
         myRobot.driveTrain.drive(drive, strafe, rotate);
 
-        // Intake control
+        // Claw control
         if (gamepad2.left_bumper) {
-            claw.state = ClawPT.State.IN;
+            myRobot.claw.turnIn(1);
         } else if (gamepad2.right_bumper) {
-            claw.state = ClawPT.State.OUT;
-            //Slide control
+            if (myRobot.slide.SlideMotor1.getCurrentPosition() > 1500) {
+                myRobot.arm.moveArmVersion2(-400);
+                myRobot.claw.turnOut(1);
+                myRobot.arm.moveArmVersion2(-350);
+                pressedOrNotPressedArm = true;
+            } else {
+                myRobot.claw.turnOut(1);
+            }
         }
 
-        if (gamepad1.right_bumper) {
-            myRobot.slide.slideIn(0.5);
-        } else if (gamepad1.left_bumper) {
-            myRobot.slide.slideOut(-0.5);
-        } else {
-            myRobot.slideStop();
+        telemetry.addData("Slide Current Position" , myRobot.slide.SlideMotor1.getCurrentPosition());
+
+        //Slide controls
+        if (gamepad1.y) {
+            slideTargetPos = myRobot.slide.slideStartingPosition + 2100;
+            pressedOrNotPressedSlide = true;
+        } else if (gamepad1.a) {
+            slideTargetPos = myRobot.slide.slideStartingPosition;
+            pressedOrNotPressedSlide = true;
+        } else if (gamepad1.b){
+            slideTargetPos = myRobot.slide.slideStartingPosition+ 750;
+            pressedOrNotPressedSlide = true;
+        }
+
+        if (pressedOrNotPressedSlide == true) {
+            myRobot.slide.moveSlidesVersion2(slideTargetPos);
+            telemetry.addData("Slides telemetry", myRobot.slide.getTelemetryForSlides());
+            telemetry.update();
         }
 
         // Send telemetry data
@@ -63,23 +86,32 @@ public class TeleOpPT extends OpMode {
         telemetry.addData("arm pos", myRobot.arm.getTelemetryForArm());
         telemetry.update();
 
-
-
+        //Arm controls
+        //Straight vertical
         if (gamepad2.y) {
-            armTargetPos = -450;
+            armTargetPos = -350;
+            pressedOrNotPressedArm = true;
+        //To pick sample off ground
         } else if (gamepad2.a) {
-            armTargetPos = -725;
+            if (myRobot.slide.SlideMotor1.getCurrentPosition() < 1000) {
+                myRobot.claw.turnOut(1);
+                armTargetPos = -740;
+                pressedOrNotPressedArm = true;
+            }
+        //To pick inside submersible
+        } else if (gamepad2.b) {
+            armTargetPos = -600;
+            pressedOrNotPressedArm = true;
+        //To pick specimen
+        } else if (gamepad2.x) {
+            armTargetPos = -700;
+            pressedOrNotPressedArm = true;
         }
-        else if (gamepad2.b) {
-            armTargetPos = -550;
+
+        if (pressedOrNotPressedArm == true) {
+            myRobot.arm.moveArmVersion2(armTargetPos);
+            telemetry.addData("Arm telemetry", myRobot.arm.getTelemetryForArm());
+            telemetry.update();
         }
-
-        myRobot.arm.moveArmVersion2(armTargetPos);
-        telemetry.addData("Arm telemetry", myRobot.arm.getTelemetryForArm());
-        telemetry.update();
-
-
-        claw.update(.5);
-
     }
 }

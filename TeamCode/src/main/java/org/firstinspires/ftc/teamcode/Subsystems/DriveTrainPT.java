@@ -2,10 +2,11 @@
 
 package org.firstinspires.ftc.teamcode.Subsystems;
 
-import com.arcrobotics.ftclib.hardware.motors.Motor;
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -14,8 +15,6 @@ import org.firstinspires.ftc.teamcode.Hardware.RobotParametersPT;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 public class DriveTrainPT {
     private RobotParametersPT params;
@@ -25,9 +24,11 @@ public class DriveTrainPT {
     public DcMotor BackRightDCMotor;
     private IMU imu;
     private YawPitchRollAngles orientation;
+    public boolean initializedFrontLeft = false;
+    public boolean initializedFrontRight = false;
 
 
-    public DriveTrainPT(RobotParametersPT params, HardwareMap hardwareMap) {
+    public DriveTrainPT(RobotParametersPT params, HardwareMap hardwareMap){
         this.params = params;
         // Initialize drive motors
         FrontLeftDCMotor = hardwareMap.get(DcMotor.class, params.frontLeftMotorName);
@@ -120,9 +121,11 @@ public class DriveTrainPT {
             BackRightDCMotor.setPower(-power * 0.75);
             //sleep(2000);
         }
+
+
     }
 
-    public void alignAngle(double angle, double power) {
+    public void alignAngle ( double angle, double power){
         FrontLeftDCMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         FrontRightDCMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         orientation = imu.getRobotYawPitchRollAngles();
@@ -136,42 +139,113 @@ public class DriveTrainPT {
     }
 
     public int getNewPosition(double distance) {
-        double Counts_Per_Motor_Rev = RobotParametersPT.Counts_Per_Motor_Wheel;
-        double Drive_Gear_Reduction = RobotParametersPT.Drive_Gear_Reduction;
-        double Wheel_Diameter = RobotParametersPT.Wheel_Diameter;
-        double Counts_Per_Inch_Drive = (Counts_Per_Motor_Rev * Drive_Gear_Reduction) / (Wheel_Diameter * 3.1415);
-        return (int) (distance * Counts_Per_Inch_Drive);
+        double Counts_Per_Motor_Rev = params.Counts_Per_Motor_Wheel;
+        double Drive_Gear_Reduction = params.Drive_Gear_Reduction;
+        double Wheel_Diameter = params.Wheel_Diameter;
+        double Counts_Per_Inch_Drive = (Counts_Per_Motor_Rev * Drive_Gear_Reduction)/(Wheel_Diameter * 3.1415);
+        return (int)(distance * Counts_Per_Inch_Drive);
+    }
+    public void driveStraight(double power, double distance) {
+        int newLeftTarget = FrontLeftDCMotor.getCurrentPosition() + (int)(getNewPosition(distance));
+        int newRightTarget = FrontRightDCMotor.getCurrentPosition() + (int)(getNewPosition(distance));
+
+        FrontLeftDCMotor.setTargetPosition(newLeftTarget);
+        FrontRightDCMotor.setTargetPosition(newRightTarget);
+        FrontLeftDCMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        FrontRightDCMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        FrontLeftDCMotor.setPower(power);
+        FrontRightDCMotor.setPower(power);
+        BackLeftDCMotor.setPower(power);
+        BackRightDCMotor.setPower(power);
+
+        while (FrontLeftDCMotor.isBusy()){}
+
     }
 
-    ArrayList<Boolean> initialized = new ArrayList<>(Arrays.asList(false, false));
 
-    public boolean driveStraight(double power, double distance) {
-        int distanceInTicks = getNewPosition(distance);
-        int [] targets = new int[2];
-        List<DcMotor> motors = new ArrayList<>(Arrays.asList(FrontLeftDCMotor, FrontRightDCMotor));
+
+    public boolean driveStraightPT(double power, double distance){
+        ArrayList<Integer> targets = new ArrayList<>(2);
+        ArrayList<DcMotor> motors = new ArrayList<>(Arrays.asList(FrontLeftDCMotor,FrontRightDCMotor));
         boolean done = true;
 
-        for(int i = 0; i < motors.size(); i++) {
+
+
+        for(int i=0;i<motors.size();i++){
             DcMotor motor = motors.get(i);
 
-            if (!initialized.get(i)) {
-                targets[i] = motor.getCurrentPosition() + distanceInTicks;
-                motor.setTargetPosition(targets[i]);
-                initialized.set(i, true);
+            if(!initializedFrontLeft && i==0){
+                int target = motor.getCurrentPosition() + getNewPosition(distance);
+                motor.setTargetPosition(target);
+                initializedFrontLeft = true;
+                targets.add(target);
+            }
+
+            if(!initializedFrontRight && i==1){
+                int target = motor.getCurrentPosition() + getNewPosition(distance);
+                motor.setTargetPosition(target);
+                initializedFrontRight = true;
+                targets.add(target);
             }
 
             motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
             motor.setPower(power);
-            if(Math.abs(motor.getCurrentPosition() - targets[i]) > 20) done = false;
+            BackLeftDCMotor.setPower(power);
+            BackRightDCMotor.setPower(power);
+            if(Math.abs(motor.getCurrentPosition() - targets.get(i)) > 20) done = true;
+        }
+        if (done){
+            initializedFrontLeft = false;
+            initializedFrontRight = false;
+            return true;
+        }
+        else {
+            return false;
         }
 
-        BackLeftDCMotor.setPower(FrontLeftDCMotor.getPower());
-        BackRightDCMotor.setPower(FrontRightDCMotor.getPower());
+    }
 
-        if(done){
-            Collections.fill(initialized, false);
+    public boolean driveBackPT(double power, double distance){
+        ArrayList<Integer> targets = new ArrayList<>(2);
+        ArrayList<DcMotor> motors = new ArrayList<>(Arrays.asList(FrontLeftDCMotor,FrontRightDCMotor));
+        boolean done = true;
+
+
+
+        for(int i=0;i<motors.size();i++){
+            DcMotor motor = motors.get(i);
+
+            if(!initializedFrontLeft && i==0){
+                int target = motor.getCurrentPosition() - getNewPosition(distance);
+                motor.setTargetPosition(target);
+                initializedFrontLeft = true;
+                targets.add(target);
+            }
+
+            if(!initializedFrontRight && i==1){
+                int target = motor.getCurrentPosition() - getNewPosition(distance);
+                motor.setTargetPosition(target);
+                initializedFrontRight = true;
+                targets.add(target);
+            }
+
+            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            motor.setPower(-power);
+            BackLeftDCMotor.setPower(-power);
+            BackRightDCMotor.setPower(-power);
+            if(Math.abs(targets.get(i) - motor.getCurrentPosition()) > 20) done = true;
         }
-        return done;
+        if (done){
+            initializedFrontLeft = false;
+            initializedFrontRight = false;
+            return true;
+        }
+        else {
+            return false;
+        }
+
     }
 
 
