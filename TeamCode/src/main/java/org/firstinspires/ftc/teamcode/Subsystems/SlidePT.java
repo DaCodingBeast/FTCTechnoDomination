@@ -50,21 +50,21 @@ public class SlidePT {
 
     private RobotParametersPT params;
 
-    public void stateUpdate(RobotParametersPT.SlideState slideState, double power) {
-        switch(slideState){
-            case SLIDE_IN:
-                slideIn(power);
-                break;
-
-            case SLIDE_OUT:
-                slideOut(-power);
-                break;
-
-            case STOP:
-                stop();
-                break;
-        }
-    }
+//    public void stateUpdate(RobotParametersPT.SlideState slideState, double power) {
+//        switch(slideState){
+//            case SLIDE_IN:
+//                slideIn(power);
+//                break;
+//
+//            case SLIDE_OUT:
+//                slideOut(-power);
+//                break;
+//
+//            case STOP:
+//                stop();
+//                break;
+//        }
+//    }
 
     public void slideIn(double power){
         SlideMotor1.setPower(power);
@@ -81,6 +81,24 @@ public class SlidePT {
         SlideMotor2.setPower(0);
 
     }
+
+
+    enum State{
+        Basket(200),
+        Specimen(150);
+
+        State(int target){
+            encoderTarget = target;
+        }
+        public final int encoderTarget;
+    }
+    State state = State.Basket;
+    public void update(){
+        boolean targetReached = Math.abs(state.encoderTarget - SlideMotor1.getCurrentPosition())< 20;
+        moveSlidesVersion2(state.encoderTarget);
+    }
+
+
 
     public void moveSlidesVersion2 (int target) {
         controller.setPID(p, i, d);

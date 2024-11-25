@@ -1,6 +1,8 @@
 //Leilanie
 
 package org.firstinspires.ftc.teamcode.Subsystems;
+import android.util.Log;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.controller.PIDController;
@@ -172,10 +174,28 @@ public class ArmMotor {
         telemetry = telemetry + "P,I,D,F (orig)"+ "%.04f, %.04f, %.04f, %.04f";
         telemetry = telemetry + pidfOrig.p + " " + pidfOrig.i + " " + pidfOrig.d + " " + pidfOrig.f + " ";
 
+//        Log.d("ROBOT", String.valueOf(getCurrentPosition(ArmMotor1)));
+
         telemetry = telemetry + "P,I,D,F (modified)"+ "%.04f, %.04f, %.04f, %.04f";
         telemetry = telemetry + pidfModified.p + " " + pidfModified.i + " " + pidfModified.d + " " + pidfModified.f + " ";
 
         return telemetry;
+    }
+
+    enum State {
+        Basket(200), Specimen(100);
+
+        State(int Target){
+            encoderTarget = Target;
+        }
+        final int encoderTarget;
+    }
+
+    State state = State.Basket;
+    public boolean targetReached = false;
+    public void update(){
+        targetReached = Math.abs(ArmMotor1.getCurrentPosition() - state.encoderTarget) < 20;
+        moveArmVersion2(state.encoderTarget);
     }
 
 
@@ -197,9 +217,6 @@ public class ArmMotor {
         ArmMotor1.setPower(Range.clip(power * .75,-0.5,0.5));
 
         //ArmMotor1.setPower(power * .75);
-
-
-
     }
     public String getTelemetryForArm(){
 
